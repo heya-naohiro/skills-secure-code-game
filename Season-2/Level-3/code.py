@@ -17,6 +17,7 @@
 import os
 import re
 from flask import Flask, request, render_template
+import html
 app = Flask(__name__)
 
 # Set the absolute path to the template directory
@@ -37,6 +38,7 @@ def index():
     if request.method == 'POST':
         planet = request.form.get('planet')
         sanitized_planet = re.sub(r'[<>{}[\]]', '', planet if planet else '')
+        sanitized_planet = html.escape(sanitized_planet)
 
         if sanitized_planet:
             if 'script' in sanitized_planet.lower() :
