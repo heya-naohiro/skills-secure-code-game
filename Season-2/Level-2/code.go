@@ -16,6 +16,8 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 var reqBody struct {
@@ -34,14 +36,21 @@ func isValidEmail(email string) bool {
 	return match
 }
 
+func encryptPassword(password string) string {
+	// パスワードの文字列をハッシュ化する
+	hash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+
+	return string(hash)
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Test users
 	var testFakeMockUsers = map[string]string{
-		"user1@example.com": "password12345",
-		"user2@example.com": "B7rx9OkWVdx13$QF6Imq",
-		"user3@example.com": "hoxnNT4g&ER0&9Nz0pLO",
-		"user4@example.com": "Log4Fun",
+		"user1@example.com": encryptPassword("password12345"),
+		"user2@example.com": encryptPassword("B7rx9OkWVdx13$QF6Imq"),
+		"user3@example.com": encryptPassword("hoxnNT4g&ER0&9Nz0pLO"),
+		"user4@example.com": encryptPassword("Log4Fun"),
 	}
 
 	if r.Method == "POST" {
@@ -58,22 +67,21 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		password := reqBody.Password
 
 		if !isValidEmail(email) {
-			log.Printf("Invalid email format: %q", email)
+			//log.Printf("Invalid email format: %q", email)
 			http.Error(w, "Invalid email format", http.StatusBadRequest)
 			return
 		}
 
 		storedPassword, ok := testFakeMockUsers[email]
 		if !ok {
-			http.Error(w, "invalid email or password", http.StatusUnauthorized)
+			http.Error(w, "Invalid Email or Password", http.StatusUnauthorized)
 			return
 		}
-
-		if password == storedPassword {
-			log.Printf("User %q logged in successfully with a valid password %q", email, password)
+		if err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(password)); err == nil {
+			log.Printf("Successful login request")
 			w.WriteHeader(http.StatusOK)
 		} else {
-			http.Error(w, "Invalid Email or Password", http.StatusUnauthorized)
+			http.Error(w, "invalid Email or Password", http.StatusUnauthorized)
 		}
 
 	} else {

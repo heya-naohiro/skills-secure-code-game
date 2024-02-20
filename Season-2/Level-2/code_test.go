@@ -51,7 +51,7 @@ func TestLoginHandler_InvalidCredentials(t *testing.T) {
 	}
 
 	respBody := strings.TrimSpace(recorder.Body.String())
-	if respBody != "Invalid Email or Password" {
+	if respBody != "invalid Email or Password" {
 		t.Errorf("Expected body %q, but got %q", "Invalid Email or Password", respBody)
 	}
 }
